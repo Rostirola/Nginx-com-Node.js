@@ -1,0 +1,57 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - node-app
+    networks:
+      - nodenet
+
+  node-app:
+    build: 
+      context: node-app
+    container_name: node-app
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=people_db
+    volumes:
+      - ./node-app:/usr/src/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    command: bash -c "npm install && node app.js"
+    tty: true
+    networks:
+      - nodenet
+
+  mysql:
+    image: mysql:latest
+    command: --innodb-use-native-aio=0
+    container_name: mysql
+    restart: always
+    tty: true
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: people_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    networks:
+      - nodenet
+
+networks:
+  nodenet:
+    driver: bridge
+
+
+volumes:
+  mysql-data:
