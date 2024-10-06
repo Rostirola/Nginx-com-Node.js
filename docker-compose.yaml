@@ -15,6 +15,7 @@ services:
     build: 
       context: node-app
     container_name: node-app
+    entrypoint: dockerize -wait tcp://mysql:3306 -timeout 20s docker-entrypoint.sh
     environment:
       - DB_HOST=mysql
       - DB_USER=root
